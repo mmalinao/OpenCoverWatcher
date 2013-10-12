@@ -1,0 +1,117 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Configuration;
+
+using NUnit.Framework;
+using NUnitCategories;
+using Moq;
+
+namespace Console.Test
+{
+    [TestFixture]
+    public class SettingsTest
+    {
+        private Settings _settings;
+
+        #region Setup and Teardown
+
+        [SetUp]
+        public void Setup()
+        {
+            _settings = new Settings();
+        }
+
+        [AttributeUsage(AttributeTargets.Method)]
+        private class SetupFakeAppConfig : Attribute, ITestAction
+        {
+            private Configuration _config;
+
+            public void BeforeTest(TestDetails testDetails)
+            {
+                _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                _config.AppSettings.Settings.Add("NUnitPath", @"C:\NUnitPath");
+                _config.AppSettings.Settings.Add("OpenCoverPath", @"C:\OpenCoverPath");
+                _config.AppSettings.Settings.Add("ReportGeneratorPath", @"C:\ReportGeneratorPath");                
+                _config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+
+            public void AfterTest(TestDetails testDetails)
+            {
+                _config.AppSettings.Settings.Remove("NUnitPath");
+                _config.AppSettings.Settings.Remove("OpenCoverPath");
+                _config.AppSettings.Settings.Remove("ReportGeneratorPath");
+                _config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+
+            public ActionTargets Targets
+            {
+                get { return ActionTargets.Test; }
+            }
+        }
+
+        #endregion
+
+        [Test]
+        [UnitTest, SetupFakeAppConfig]
+        public void GetNUnitPath_returns_NUnitPath_from_appsettings()
+        {
+            // ACT
+            // ASSERT
+            Assert.AreEqual(@"C:\NUnitPath", _settings.GetNUnitPath());
+        }
+
+        [Test]
+        [UnitTest]
+        public void GetNUnitPath_throws_SettingsException_if_NUnitPath_appsetting_missing()
+        {
+            // ACT
+            // ASSERT
+            var e = Assert.Throws<SettingsException>(() => _settings.GetNUnitPath());
+            Assert.AreEqual("Could not find 'NUnitPath' in appsettings", e.Message);
+        }
+
+        [Test]
+        [UnitTest, SetupFakeAppConfig]
+        public void GetOpenCoverPath_returns_OpenCoverPath_from_appsettings()
+        {
+            // ACT
+            // ASSERT
+            Assert.AreEqual(@"C:\OpenCoverPath", _settings.GetOpenCoverPath());
+        }
+
+        [Test]
+        [UnitTest]
+        public void GetOpenCoverPath_throws_SettingsException_if_OpenCoverPath_appsetting_missing()
+        {
+            // ACT
+            // ASSERT
+            var e = Assert.Throws<SettingsException>(() => _settings.GetOpenCoverPath());
+            Assert.AreEqual("Could not find 'OpenCoverPath' in appsettings", e.Message);
+        }
+
+        [Test]
+        [UnitTest, SetupFakeAppConfig]
+        public void GetReportGeneratorPath_returns_ReportGenerator_from_appsettings()
+        {
+            // ACT sdfsd
+            // ASSERT
+            Assert.AreEqual(@"C:\ReportGeneratorPath", _settings.GetReportGeneratorPath());
+        }
+
+        [Test]
+        [UnitTest]
+        public void GetReportGeneratorPath_throws_SettingsException_if_ReportGeneratorPath_missing()
+        {
+            // ACT
+            // ASSERT
+            var e = Assert.Throws<SettingsException>(() => _settings.GetReportGeneratorPath());
+            Assert.AreEqual("Could not find 'ReportGeneratorPath' in appsettings", e.Message);
+        }
+
+    }
+}

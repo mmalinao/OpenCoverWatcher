@@ -1,0 +1,266 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using NUnitCategories;
+using Moq;
+using Client;
+
+namespace Client.Test
+{
+    [TestFixture]
+    public class WatcherViewModelTest
+    {
+        #region Setup and Teardown
+
+        [AttributeUsage(AttributeTargets.Method)]
+        private class MockAppConfig : Attribute, ITestAction
+        {
+            private Configuration _config;
+
+            public void BeforeTest(TestDetails testDetails)
+            {
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                config.AppSettings.Settings.Clear();
+                config.AppSettings.Settings.Add(ExecutableKey.NUnitPath.ToString(), "nunit-console.exe");
+                config.AppSettings.Settings.Add(ExecutableKey.OpenCoverPath.ToString(), "OpenCover.Console.exe");
+                config.AppSettings.Settings.Add(ExecutableKey.ReportGenPath.ToString(), "ReportGenerator.exe");
+                config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+
+            public void AfterTest(TestDetails testDetails)
+            {
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                config.AppSettings.Settings.Clear();
+                config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+
+            public ActionTargets Targets
+            {
+                get { return ActionTargets.Test; }
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Method)]
+        private class MockSolutionDirectory : Attribute, ITestAction
+        {
+            private DirectoryInfo _solDir;
+
+            public void BeforeTest(TestDetails testDetails)
+            {
+                _solDir = new DirectoryInfo("FakeSolution");
+                
+                if (_solDir.Exists)
+                    _solDir.Delete(true);
+
+                _solDir.Create();
+            }
+
+            public void AfterTest(TestDetails testDetails)
+            {
+                _solDir.Delete(true);
+            }
+
+            public ActionTargets Targets
+            {
+                get { return ActionTargets.Test; }
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Method)]
+        private class MockCsProjectDirectory : Attribute, ITestAction
+        {
+            private DirectoryInfo _projDir;
+
+            public void BeforeTest(TestDetails testDetails)
+            {
+                _projDir = new DirectoryInfo("FakeCsProj");
+
+                if (_projDir.Exists)
+                    _projDir.Delete(true);
+
+                _projDir.Create();
+            }
+
+            public void AfterTest(TestDetails testDetails)
+            {
+                _projDir.Delete(true);
+            }
+
+            public ActionTargets Targets
+            {
+                get { return ActionTargets.Test; }
+            }
+        }
+
+        #endregion
+
+        #region Constructor Tests
+
+        private static void ModifyAppSetting(string key, string value)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings.Remove(key);
+            config.AppSettings.Settings.Add(key, value);
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        private static void RemoveAppSetting(string key)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings.Remove(key);
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_NUnit_executable_path_not_found()
+        {
+            // ASSEMBLE
+            const string path = "C:\\badpath\\nunit-console.exe";
+            ModifyAppSetting(ExecutableKey.NUnitPath.ToString(), path);
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(path + " executable could not be found", e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_NUnit_key_in_appSettings_is_missing()
+        {
+            //ASSEMBLE
+            RemoveAppSetting(ExecutableKey.NUnitPath.ToString());
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(String.Format("Invalid configuration - missing {0} key in appSettings", 
+                            ExecutableKey.NUnitPath), e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_OpenCover_executable_path_not_found()
+        {
+            //ASSEMBLE
+            const string path = "C:\\badpath\\OpenCover.Console.exe";
+            ModifyAppSetting(ExecutableKey.OpenCoverPath.ToString(), path);
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(path + " executable could not be found", e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_OpenCover_key_in_appSettings_is_missing()
+        {
+            //ASSEMBLE
+            RemoveAppSetting(ExecutableKey.OpenCoverPath.ToString());
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(String.Format("Invalid configuration - missing {0} key in appSettings",
+                            ExecutableKey.OpenCoverPath), e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_ReportGenerator_executable_path_not_found()
+        {
+            //ASSEMBLE
+            const string path = "C:\\badpath\\ReportGenerator.exe";
+            ModifyAppSetting(ExecutableKey.ReportGenPath.ToString(), path);
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(path + " executable could not be found", e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_ReportGenerator_key_in_appSettings_is_missing()
+        {
+            //ASSEMBLE
+            RemoveAppSetting(ExecutableKey.ReportGenPath.ToString());
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(String.Format("Invalid configuration - missing {0} key in appSettings",
+                            ExecutableKey.ReportGenPath), e.Message);
+        }
+
+        #endregion
+
+        #region Extensions Tests
+
+        [Test]
+        [UnitTest, MockSolutionDirectory]
+        public void IsSolutionDirectory_returns_false_if_no_sln_file_in_given_directory()
+        {
+            // ASSEMBLE
+            var solDir = new DirectoryInfo("FakeSolution");
+
+            // ACT
+            // ASSERT
+            Assert.IsFalse(solDir.IsSolutionDirectory());
+        }
+
+        [Test]
+        [UnitTest, MockSolutionDirectory]
+        public void IsSolutionDirectory_returns_true_if_sln_file_in_given_directory()
+        {         
+            // ASSEMBLE
+            var solDir = new DirectoryInfo("FakeSolution");
+            var solFile = new FileInfo(solDir.FullName + "\\FakeSolution.sln");
+            solFile.Create().Close();
+
+            // ACT
+            // ASSERT
+            Assert.IsTrue(solDir.IsSolutionDirectory());
+        }
+
+        [Test]
+        [UnitTest, MockCsProjectDirectory]
+        public void IsProjectDirectory_returns_false_if_no_csproj_file_in_given_directory()
+        {
+            // ASSEMBLE
+            var csProjDir = new DirectoryInfo("FakeCsProj");
+
+            // ACT
+            // ASSERT
+            Assert.IsFalse(csProjDir.IsProjectDirectory());
+        }
+
+        [Test]
+        [UnitTest, MockCsProjectDirectory]
+        public void IsProjectDirectory_returns_true_if_csproj_file_in_given_directory()
+        {
+            // ASSEMBLE
+            var csProjDir = new DirectoryInfo("FakeCsProj");
+            var csProjFile = new FileInfo(csProjDir.FullName + "\\FakeCsProj.csproj");
+            csProjFile.Create().Close();
+
+            // ACT
+            // ASSERT
+            Assert.IsTrue(csProjDir.IsProjectDirectory());
+        }
+
+        #endregion
+
+
+    }
+}

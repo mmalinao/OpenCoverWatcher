@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq.Expressions;
+
+namespace Client
+{
+    public class WatcherModel
+    {
+        public DirectoryInfo SolutionDirectory { get; set; }
+        public List<DirectoryInfo> TestProjectDirectories { get; set; } 
+    }
+
+    
+}

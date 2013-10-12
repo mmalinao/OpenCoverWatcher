@@ -1,0 +1,157 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using NUnitCategories;
+using Moq;
+using Client;
+
+namespace Client.Test
+{
+    [TestFixture]
+    public class WatcherViewModelTest
+    {
+
+        #region Setup and Teardown
+
+        [AttributeUsage(AttributeTargets.Method)]
+        private class MockAppConfig : Attribute, ITestAction
+        {
+            private Configuration _config;
+
+            public void BeforeTest(TestDetails testDetails)
+            {
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                config.AppSettings.Settings.Clear();
+                config.AppSettings.Settings.Add(ExecutableKey.NUnitPath.ToString(), "nunit-console.exe");
+                config.AppSettings.Settings.Add(ExecutableKey.OpenCoverPath.ToString(), "OpenCover.Console.exe");
+                config.AppSettings.Settings.Add(ExecutableKey.ReportGenPath.ToString(), "ReportGenerator.exe");
+                config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+
+            public void AfterTest(TestDetails testDetails)
+            {
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                config.AppSettings.Settings.Clear();
+                config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+
+            public ActionTargets Targets
+            {
+                get { return ActionTargets.Test; }
+            }
+        }
+
+        #endregion
+
+        #region Constructor Tests
+
+        private void ModifyAppSetting(string key, string value)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings.Remove(key);
+            config.AppSettings.Settings.Add(key, value);
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        private void RemoveAppSetting(string key)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings.Remove(key);
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_NUnit_executable_path_not_found()
+        {
+            // ASSEMBLE
+            const string path = "C:\\badpath\\nunit-console.exe";
+            ModifyAppSetting(ExecutableKey.NUnitPath.ToString(), path);
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(path + " executable could not be found", e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_NUnit_key_in_appSettings_is_missing()
+        {
+            //ASSEMBLE
+            RemoveAppSetting(ExecutableKey.NUnitPath.ToString());
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(String.Format("Invalid configuration - missing {0} key in appSettings", 
+                            ExecutableKey.NUnitPath), e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_OpenCover_executable_path_not_found()
+        {
+            //ASSEMBLE
+            const string path = "C:\\badpath\\OpenCover.Console.exe";
+            ModifyAppSetting(ExecutableKey.OpenCoverPath.ToString(), path);
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(path + " executable could not be found", e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_OpenCover_key_in_appSettings_is_missing()
+        {
+            //ASSEMBLE
+            RemoveAppSetting(ExecutableKey.OpenCoverPath.ToString());
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(String.Format("Invalid configuration - missing {0} key in appSettings",
+                            ExecutableKey.OpenCoverPath), e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_ReportGenerator_executable_path_not_found()
+        {
+            //ASSEMBLE
+            const string path = "C:\\badpath\\ReportGenerator.exe";
+            ModifyAppSetting(ExecutableKey.ReportGenPath.ToString(), path);
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(path + " executable could not be found", e.Message);
+        }
+
+        [Test]
+        [UnitTest, MockAppConfig]
+        public void Constructor_throws_ApplicationException_if_ReportGenerator_key_in_appSettings_is_missing()
+        {
+            //ASSEMBLE
+            RemoveAppSetting(ExecutableKey.ReportGenPath.ToString());
+
+            //ACT
+            //ASSERT
+            var e = Assert.Throws<ApplicationException>(() => new WatcherViewModel());
+            Assert.AreEqual(String.Format("Invalid configuration - missing {0} key in appSettings",
+                            ExecutableKey.ReportGenPath), e.Message);
+        }
+
+        #endregion
+
+    }
+}

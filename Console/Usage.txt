@@ -1,0 +1,28 @@
+
+<<ERRORMSG>>
+
+=========================================================================
+OpenCover Watcher
+
+Given a solution's directory path as its target, this program will watch
+for changes on test projects and produce a Code Coverage report using 
+OpenCover.
+
+Dependencies: NUnit Console, OpenCover, and ReportGenerator.
+
+NOTE: Test projects under the given solution directory must follow the
+naming convention of "<ProjectName>.Test". For example, "Database.Test".
+=========================================================================
+
+OpenCoverWatcher -targetDir:<target directory> [-config:<build configuration>]
+
+Usage:
+  -targetDir	Target directory. This should be the absolute path to the
+                solution's directory. (Required)
+  -buildConfig  Target solution's build configuration. (Required)
+  -outputDir    Directory to spit out generated reports. Defaults to 
+                Debug. (Optional)
+Or
+  -?            Display usage instructions.
+
+=========================================================================

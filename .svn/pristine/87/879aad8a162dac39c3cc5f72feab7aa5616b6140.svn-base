@@ -1,0 +1,166 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Input;
+
+namespace Client
+{
+    /*
+     * MVVM Pattern
+     * 
+     * The View and the ViewModel communicate via data-binding, method calls, properties, 
+     * events, and messages.
+     * 
+     * The ViewModel exposes not only models, but other properties (such as state information,
+     * like the "is busy" indicator) and commands.
+     * 
+     * The View handles its own UI events, then maps them to the ViewModel via commands
+     * 
+     * The Models and properties on the ViewModel are updated from the via via two-way databinding
+     * 
+     * The Model should be "clean" - only consist of fields/properties and no business logic.
+     */
+
+
+
+    public class WatcherViewModel : INotifyPropertyChanged
+    {
+        private readonly WatcherModel _model;
+        private List<DirectoryInfo> _testItems; 
+
+        public WatcherViewModel()
+        {
+            _model = new WatcherModel();
+            _testItems = new List<DirectoryInfo>()
+            {
+                new DirectoryInfo("C:\\Path1"),
+                new DirectoryInfo("C:\\Path2")
+            };
+        }
+
+        public string SolutionDirectoryPath
+        {
+            get { return _model.SolutionDirectory.FullName; }
+            set
+            {   
+                if (value != String.Empty)
+                    _model.SolutionDirectory = new DirectoryInfo(value);
+                
+                OnPropertyChanged("SolutionDirectoryPath");
+            }
+        }
+
+        public List<DirectoryInfo> TestItems
+        {
+            get { return _testItems; }
+            set
+            {
+                _testItems = value;
+                OnPropertyChanged("TestItems");
+            }
+        }
+
+        #region ICommand
+
+        public ICommand BrowseFolderCommand
+        {
+            get { return new DelegateCommand(BrowseFolder); }
+        }
+
+        private void BrowseFolder(object obj)
+        {
+            var dialog = new FolderBrowserDialog();
+            dialog.ShowDialog();
+            SolutionDirectoryPath = dialog.SelectedPath;
+        }
+
+        #endregion
+
+        #region INotifyPropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
+
+    }
+
+    public static class PropertyChangedExtensions
+    {
+        public static bool ChangeAndNotify<T>(this PropertyChangedEventHandler handler,
+                                                ref T field, T value, Expression<Func<T>> memberExpression)
+        {
+            if (memberExpression == null)
+                throw new ArgumentNullException("memberExpression");
+
+            var body = memberExpression.Body as MemberExpression;
+            if (body == null)
+                throw new ArgumentException("Lambda must return a property.");
+
+            if (EqualityComparer<T>.Default.Equals(field, value))
+                return false;
+
+            var vmExpression = body.Expression as ConstantExpression;
+            if (vmExpression != null)
+            {
+                LambdaExpression lambda = Expression.Lambda(vmExpression);
+                Delegate vmFunc = lambda.Compile();
+                object sender = vmFunc.DynamicInvoke();
+
+                if (handler != null)
+                    handler(sender, new PropertyChangedEventArgs(body.Member.Name));
+            }
+
+            field = value;
+            return true;
+        }
+    }
+
+    public class DelegateCommand : ICommand
+    {
+        private readonly Predicate<object> _canExecute;
+        private readonly Action<object> _execute;
+
+        public event EventHandler CanExecuteChanged;
+
+        public DelegateCommand(Action<object> execute)
+            : this(execute, null)
+        {
+        }
+
+        public DelegateCommand(Action<object> execute,
+                       Predicate<object> canExecute)
+        {
+            _execute = execute;
+            _canExecute = canExecute;
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return _canExecute == null || _canExecute(parameter);
+        }
+
+        public void Execute(object parameter)
+        {
+            _execute(parameter);
+        }
+
+        public void RaiseCanExecuteChanged()
+        {
+            if (CanExecuteChanged != null)
+                CanExecuteChanged(this, EventArgs.Empty);
+        }
+    }
+}

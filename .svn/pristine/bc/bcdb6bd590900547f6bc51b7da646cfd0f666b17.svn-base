@@ -1,0 +1,168 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Input;
+
+namespace Client
+{
+    /*
+     * MVVM Pattern
+     * 
+     * The View and the ViewModel communicate via data-binding, method calls, properties, 
+     * events, and messages.
+     * 
+     * The ViewModel exposes not only models, but other properties (such as state information,
+     * like the "is busy" indicator) and commands.
+     * 
+     * The View handles its own UI events, then maps them to the ViewModel via commands
+     * 
+     * The Models and properties on the ViewModel are updated from the via via two-way databinding
+     * 
+     * The Model should be "clean" - only consist of fields/properties and no business logic.
+     */
+
+
+
+    public class WatcherViewModel : ViewModel
+    {
+        public WatcherViewModel()
+        {
+            _model = new WatcherModel();
+
+            foreach (var name in Enum.GetNames(typeof(ExecutableKey)).Where(name => ConfigurationManager.AppSettings[name] == null))
+                throw new ApplicationException(String.Format("Invalid configuration - missing {0} key in appSettings", name));            
+
+            _executables = new Dictionary<ExecutableKey, FileInfo>()
+            {
+                { ExecutableKey.NUnitPath, new FileInfo(ConfigurationManager.AppSettings[ExecutableKey.NUnitPath.ToString()]) },
+                { ExecutableKey.OpenCoverPath, new FileInfo(ConfigurationManager.AppSettings[ExecutableKey.OpenCoverPath.ToString()]) },
+                { ExecutableKey.ReportGenPath, new FileInfo(ConfigurationManager.AppSettings[ExecutableKey.ReportGenPath.ToString()]) }
+            };
+
+            foreach (var executable in _executables.Where(executable => !executable.Value.Exists))
+                throw new ApplicationException(String.Format("{0} executable could not be found", executable.Value.FullName));
+
+        }
+
+        #region Fields
+
+        private readonly WatcherModel _model;
+
+        private readonly Dictionary<ExecutableKey, FileInfo> _executables; 
+        
+        private List<FileSystemWatcher> _watchers; 
+
+        #endregion 
+
+        #region Properties - these are exposed to the View via Binding
+
+        public string SolutionDirectoryPath
+        {
+            get { return _model.SolutionDirectory.FullName; }
+            set
+            {
+                if (value == String.Empty) 
+                    return;
+
+                var dir = new DirectoryInfo(value);
+
+                // TODO: Need to wait for Window loaded before instantiating this class in order for Validation to work properly
+                //if (!dir.IsSolutionDirectory())
+                //    throw new ApplicationException("Not a VisualStudio directory");
+
+                _model.SolutionDirectory = dir;
+                NotifyChange(() => SolutionDirectoryPath);
+            }
+        }
+
+        public IEnumerable<DirectoryInfo> ProjectDirectories
+        {
+            get { return _model.ProjectDirectories; }
+            set
+            {
+                _model.ProjectDirectories = value;
+                NotifyChange(() => ProjectDirectories);
+            }
+        }
+
+        public string BuildConfig
+        {
+            get { return _model.BuildConfig; }
+            set
+            {
+                _model.BuildConfig = value;
+                NotifyChange(() => BuildConfig);
+            }
+        }
+
+        public ICommand BrowseFolderCommand
+        {
+            get { return new DelegateCommand(BrowseFolder); }
+        }
+
+        public ICommand RunCommand
+        {
+            get { return new DelegateCommand(Run); }
+        }
+
+        #endregion
+
+        #region Commands
+
+        private void BrowseFolder(object obj)
+        {
+            var dialog = new FolderBrowserDialog();
+            dialog.ShowDialog();
+
+            SolutionDirectoryPath = dialog.SelectedPath;
+
+            if (!_model.SolutionDirectory.IsSolutionDirectory())
+                ProjectDirectories = new List<DirectoryInfo>();
+            else            
+                ProjectDirectories = _model.SolutionDirectory
+                                           .GetDirectories()
+                                           .Where(dir => dir.IsProjectDirectory())
+                                           .ToList();
+        }
+
+        private void Run(object obj)
+        {
+            _watchers = new List<FileSystemWatcher>();
+        }
+
+        #endregion
+
+    }
+
+    public enum ExecutableKey
+    {
+        NUnitPath = 1,
+        OpenCoverPath = 2,
+        ReportGenPath = 3
+    }
+
+    internal static class Extensions
+    {
+        public static bool IsSolutionDirectory(this DirectoryInfo dir)
+        {
+            return dir.GetFiles().Any(x => x.Name.EndsWith(".sln"));
+        }
+
+        public static bool IsProjectDirectory(this DirectoryInfo dir)
+        {
+            return dir.GetFiles().Any(x => x.Name.EndsWith(".csproj"));
+        }
+
+    }    
+
+}

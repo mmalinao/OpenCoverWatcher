@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <startup> 
+    <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5" />
+  </startup>
+  <appSettings>
+    <add key="NUnitPath" value="nunit-console.exe"/>
+    <add key="OpenCoverPath" value="OpenCover.Console.exe"/>
+    <add key="ReportGenPath" value="ReportGenerator.exe"/>
+  </appSettings>
+</configuration>

@@ -1,0 +1,32 @@
+﻿using System.IO;
+using System.Windows;
+using Microsoft.Practices.Unity;
+
+namespace Client
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            var vm = new WatcherViewModel() { SolutionDirectoryPath = "C:\\" };
+            var window = new MainWindow(vm);
+            
+            //var window = new MainWindow(new WatcherViewModel());
+
+            Current.MainWindow = window;
+            window.Show();
+
+            //IUnityContainer container = new UnityContainer();
+
+            //container.RegisterInstance()
+
+            //var window = container.Resolve<MainWindow>();
+            //Current.MainWindow = window;
+            //window.Show();
+        }
+
+    }
+}

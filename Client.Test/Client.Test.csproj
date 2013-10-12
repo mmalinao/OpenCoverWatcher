@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{596B37CF-4792-4EE2-92AC-8E57EDEFC216}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Client.Test</RootNamespace>
+    <AssemblyName>Client.Test</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Autofac">
+      <HintPath>..\packages\OpenCover.4.5.1923\Autofac.dll</HintPath>
+    </Reference>
+    <Reference Include="Autofac.Configuration">
+      <HintPath>..\packages\OpenCover.4.5.1923\Autofac.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Gendarme.Framework">
+      <HintPath>..\packages\OpenCover.4.5.1923\Gendarme.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Gendarme.Rules.Maintainability">
+      <HintPath>..\packages\OpenCover.4.5.1923\Gendarme.Rules.Maintainability.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory">
+      <HintPath>..\packages\ReportGenerator.1.9.1.0\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory.CSharp">
+      <HintPath>..\packages\ReportGenerator.1.9.1.0\ICSharpCode.NRefactory.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\OpenCover.4.5.1923\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\packages\OpenCover.4.5.1923\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\packages\Moq.4.1.1309.1617\lib\net40\Moq.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit-console">
+      <HintPath>..\packages\NUnit.Runners.2.6.2\tools\nunit-console.exe</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.6.2.12296, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenCover.Console">
+      <HintPath>..\packages\OpenCover.4.5.1923\OpenCover.Console.exe</HintPath>
+    </Reference>
+    <Reference Include="OpenCover.Extensions">
+      <HintPath>..\packages\OpenCover.4.5.1923\OpenCover.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenCover.Framework">
+      <HintPath>..\packages\OpenCover.4.5.1923\OpenCover.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="ReportGenerator">
+      <HintPath>..\packages\ReportGenerator.1.9.1.0\ReportGenerator.exe</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="SystemInterface, Version=1.0.0.0, Culture=neutral, PublicKeyToken=eac5c13f744ba6e9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\SystemWrapper-sn.0.5.2\lib\net40\SystemInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SystemWrapper, Version=0.5.0.0, Culture=neutral, PublicKeyToken=9861416082383a00, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\SystemWrapper-sn.0.5.2\lib\net40\SystemWrapper.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="WatcherViewModelTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Client.csproj">
+      <Project>{9b68fe49-445f-4774-8a33-a995bf4516b0}</Project>
+      <Name>Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NUnitCategories\NUnitCategories.csproj">
+      <Project>{003ab7fe-656e-4138-853f-8a5fd6d65f7f}</Project>
+      <Name>NUnitCategories</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

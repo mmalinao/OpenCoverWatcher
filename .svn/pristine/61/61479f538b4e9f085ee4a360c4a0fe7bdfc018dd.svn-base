@@ -1,0 +1,13 @@
+﻿using System.Collections.Generic;
+using System.IO;
+
+namespace Client
+{
+    public class WatcherModel
+    {        
+        public DirectoryInfo SolutionDirectory { get; set; }
+        public IEnumerable<DirectoryInfo> ProjectDirectories { get; set; }
+        public string BuildConfig { get; set; }
+    }
+
+}

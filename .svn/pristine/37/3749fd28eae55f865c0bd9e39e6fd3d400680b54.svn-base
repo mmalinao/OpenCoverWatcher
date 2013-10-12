@@ -1,0 +1,21 @@
+﻿using System.Windows;
+using Microsoft.Practices.Unity;
+
+namespace Client
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            IUnityContainer container = new UnityContainer();
+            
+            
+
+            var window = container.Resolve<MainWindow>();
+            window.Show();
+        }
+    }
+}

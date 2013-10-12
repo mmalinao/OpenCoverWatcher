@@ -1,0 +1,97 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Input;
+
+namespace Client
+{
+    /*
+     * MVVM Pattern
+     * 
+     * The View and the ViewModel communicate via data-binding, method calls, properties, 
+     * events, and messages.
+     * 
+     * The ViewModel exposes not only models, but other properties (such as state information,
+     * like the "is busy" indicator) and commands.
+     * 
+     * The View handles its own UI events, then maps them to the ViewModel via commands
+     * 
+     * The Models and properties on the ViewModel are updated from the via via two-way databinding
+     * 
+     * The Model should be "clean" - only consist of fields/properties and no business logic.
+     */
+
+
+
+    public class WatcherViewModel : ViewModel
+    {
+        public WatcherViewModel()
+        {
+            _model = new WatcherModel();
+            _testItems = new List<DirectoryInfo>()
+            {
+                new DirectoryInfo("C:\\Path1"),
+                new DirectoryInfo("C:\\Path2")
+            };
+        }
+
+        #region Fields
+
+        private readonly WatcherModel _model;
+        private List<DirectoryInfo> _testItems;
+
+        #endregion 
+
+        #region Properties - these are exposed to the View via Binding
+
+        public string SolutionDirectoryPath
+        {
+            get { return _model.SolutionDirectory.FullName; }
+            set
+            {
+                if (value == String.Empty) return;
+
+                _model.SolutionDirectory = new DirectoryInfo(value);
+                NotifyChange(() => SolutionDirectoryPath);
+            }
+        }
+
+        public List<DirectoryInfo> TestItems
+        {
+            get { return _testItems; }
+            set
+            {
+                _testItems = value;
+                NotifyChange(() => TestItems);
+            }
+        }
+
+        public ICommand BrowseFolderCommand
+        {
+            get { return new DelegateCommand(BrowseFolder); }
+        }
+
+        #endregion
+
+        #region Commands
+
+        private void BrowseFolder(object obj)
+        {
+            var dialog = new FolderBrowserDialog();
+            dialog.ShowDialog();
+            SolutionDirectoryPath = dialog.SelectedPath;
+        }
+
+        #endregion
+
+    }
+
+    
+}

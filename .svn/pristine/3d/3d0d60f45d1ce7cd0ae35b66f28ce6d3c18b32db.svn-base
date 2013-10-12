@@ -1,0 +1,20 @@
+﻿using System.Collections.Generic;
+using System.IO;
+
+namespace Client
+{
+    public interface IWatcherModel
+    {
+        DirectoryInfo SolutionDirectory { get; set; }
+        IEnumerable<DirectoryInfo> ProjectDirectories { get; set; }
+        string BuildConfig { get; set; }
+    }
+
+    public class WatcherModel : IWatcherModel
+    {        
+        public DirectoryInfo SolutionDirectory { get; set; }
+        public IEnumerable<DirectoryInfo> ProjectDirectories { get; set; }
+        public string BuildConfig { get; set; }
+    }
+
+}
